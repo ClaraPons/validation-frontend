@@ -8,12 +8,15 @@ const Users = () => {
 
     const cities = [
         {
-            city:'Paris'
+            value:'Paris',
+            text:'Paris'
         }, 
         {
-            city:'Los Angeles'
+            value:'Los Angeles', 
+            text:'Los Angeles'
         },{
-            city:'Tokyo'
+            value:'Tokyo', 
+            text:'Tokyo'
         }
     ]
     const [name, setName] = useState('')
@@ -21,6 +24,12 @@ const Users = () => {
     const [email, setEmail] = useState('')
     const [city, setCity] = useState('')
     const [options, setOptions] = useState([])
+    const [image, setImage] = useState('')
+    const [errors, setErrors] = useState([])
+
+    useEffect(() => {
+        createSelect()
+    }, [])
 
     const handleChangeName = (e) => {
         setName(e.target.value)
@@ -41,13 +50,21 @@ const Users = () => {
         setCity(e.target.value)
     }
 
-    // const createSelectOptions = () => {
-    //
-    //     let formattedCities = cities.map((city) =>{return {city}})
+    const handleChangeImage= (e) => {
+        setImage(e.target.value)
+    }
 
-    //     setOptions(formattedCities)
-    //     console.log(options);
-    // }
+    const createSelect = () => {
+        const formattedOptions = cities.map(city => {
+            return {
+              value: city.value,
+              text: city.text
+            }
+          })
+      
+          setOptions(formattedOptions)
+    
+    }
 
     const postUser = async (e) => {
        e.preventDefault()
@@ -56,6 +73,7 @@ const Users = () => {
             name,
             password,
             email,
+            city, 
         }
 
         const request = await fetch('http://localhost:5006/users', {
@@ -66,22 +84,36 @@ const Users = () => {
             body: JSON.stringify(user)
         })
         const response = await request.json()
-        // console.log(response.map((r)=> {
-        //    return r.param
-        // }));
-        
-        // console.log(cities.map((city) =>{return city}));
+       
+        if(request.status === 400){
+            setErrors(response)
+        }else{
+            setName('')
+            setPassword('')
+            setEmail('')
+            setImage('')
+            setCity('')
+            setErrors([])
+            alert('Done')
+        }
+
+        // setErrors(response)
+        // console.log(response);
+
+        //  const result = errors.filter(word => word.param === "password");
+
     }
 
     return(
         <>
             <H1>Formulaire</H1>
             <form onSubmit={postUser}>
-                <Input label='Name' type='text' value={name} placeholder='Enter Name' handleChange={handleChangeName}/>
-                <Input label='Password' type='password' value={password} placeholder='Enter Password' handleChange={handleChangePassword}/>
-                <Input label='Email' type='email' value={email} placeholder='Enter Email' handleChange={handleChangeEmail}/>
-                <Select label='Choose a city:' value={city} text={cities.map((city) =>{return city.city})} handleChange={handleSelect}/>
-                <Button type='submit' text='Submit'/>
+                <Input label='Name' type='text' required={!name} error={errors.filter(error => error.param === "name")} value={name} placeholder='Enter Name' handleChange={handleChangeName}/>
+                <Input label='Password' required={!password} type='password' error={errors.filter(error => error.param === "password")} value={password} placeholder='Enter Password' handleChange={handleChangePassword}/>
+                <Input label='Email' type='text' required={!email}  value={email} error={errors.filter(error => error.param === "email")} placeholder='Enter Email' handleChange={handleChangeEmail}/>
+                <Input label='Image' type='text' required={!image} value={image} placeholder='Enter your picture' handleChange={handleChangeImage}/>
+                <Select label='Choose a city:' required={!city} options={options} value={city} handleChange={handleSelect}/>
+                <Button type='submit' text='Submit' disabled={!name || !password || !email || !image || !city}/>
             </form>
         </>
     )
